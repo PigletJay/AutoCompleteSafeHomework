@@ -9,8 +9,6 @@ import utils.ApiService.userInfo
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.zip.GZIPInputStream
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
 
 object HttpClient {
 
@@ -21,19 +19,19 @@ object HttpClient {
      * GET
      */
     suspend inline fun <reified T> get(url: String, params: String = ""): T =
-        doRequest(typeOf<T>(), "$url$params", null) as T
+        doRequest("$url$params", null, serializer())
 
     /**
      * POST
      */
     suspend inline fun <reified T> post(url: String, params: Any): T =
-        doRequest(typeOf<T>(), url, params) as T
+        doRequest(url, params, serializer())
 
     /**
      * 请求
      */
     @Suppress("UNCHECKED_CAST", "BlockingMethodInNonBlockingContext")
-    suspend fun doRequest(type: KType, url: String, params: Any?): Any = withContext(IO) {
+    suspend fun <T> doRequest(url: String, params: Any?, serializer: KSerializer<T>): T = withContext(IO) {
         var urlConn: HttpURLConnection? = null
         try {
             //替换域名
@@ -56,10 +54,9 @@ object HttpClient {
                     doOutput = true
                     requestMethod = "POST"
                     //转换为Json参数
-                    val jsonParams =
-                        defJson.encodeToString(params::class.serializer() as KSerializer<Any>, params)
+                    val jsonParams = defJson.encodeToString(params::class.serializer() as KSerializer<Any>, params)
                     //写入数据
-                    outputStream.writer().use { it.write(jsonParams) }
+                    outputStream.use { it.write(jsonParams.toByteArray()) }
                 }
             }
             //转话响应数据
@@ -67,12 +64,14 @@ object HttpClient {
                 GZIPInputStream(urlConn.inputStream)
             } else {
                 urlConn.inputStream
-            }.use { it.readBytes() }
+            }.reader().use {
+                it.readText()
+            }
             //按类型返回数据
-            return@withContext when (type) {
-                typeOf<ByteArray>() -> response
-                typeOf<String>() -> String(response)
-                else -> defJson.decodeFromString(serializer(type), String(response))!!
+            if (serializer.descriptor.serialName == "kotlin.String") {
+                response as T
+            } else {
+                defJson.decodeFromString(serializer, response)
             }
         } finally {
             urlConn?.disconnect()
