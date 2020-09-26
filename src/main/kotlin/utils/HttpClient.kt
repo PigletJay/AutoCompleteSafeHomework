@@ -3,6 +3,7 @@ package utils
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import utils.ApiService.userInfo
@@ -53,10 +54,12 @@ object HttpClient {
                 if (params != null) {
                     doOutput = true
                     requestMethod = "POST"
-                    //转换为Json参数
-                    val jsonParams = defJson.encodeToString(params::class.serializer() as KSerializer<Any>, params)
                     //写入数据
-                    outputStream.use { it.write(jsonParams.toByteArray()) }
+                    outputStream.use {
+                        it.write(
+                            defJson.encodeToString(params::class.serializer() as KSerializer<Any>, params).toByteArray()
+                        )
+                    }
                 }
             }
             //转话响应数据
@@ -68,7 +71,7 @@ object HttpClient {
                 it.readText()
             }
             //按类型返回数据
-            if (serializer.descriptor.serialName == "kotlin.String") {
+            if (serializer == String.serializer()) {
                 response as T
             } else {
                 defJson.decodeFromString(serializer, response)

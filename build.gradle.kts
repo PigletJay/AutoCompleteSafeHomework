@@ -18,9 +18,6 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         jvmTarget = "1.8"
-        freeCompilerArgs = listOf(
-            "-Xuse-experimental=kotlinx.serialization.InternalSerializationApi",
-            "-Xuse-experimental=kotlinx.serialization.ExperimentalSerializationApi"
-        )
+        freeCompilerArgs = listOf("-Xuse-experimental=kotlinx.serialization.InternalSerializationApi")
     }
 }
