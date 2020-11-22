@@ -12,7 +12,7 @@ import java.net.URLDecoder
 import kotlin.text.Charsets.UTF_8
 
 /**
- * 作业项
+ * 作业
  */
 @Serializable
 data class Homework(

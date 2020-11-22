@@ -12,7 +12,7 @@ class Main {
         fun main(args: Array<String>) = runBlocking {
             println("自动完成安全作业")
             println("本程序使用Kotlin编写，开源地址：https://github.com/PigletJay/AutoCompleteSafeHomework\n")
-            println("请在打开文件内输入学生账号（每行一个）并保存")
+            println("请在打开文件中输入学生账号（每行一个）并保存")
             println("保存完成后，请按下回车键运行...")
             val file = File("students.txt")
             file.takeUnless { it.exists() }?.createNewFile()
@@ -43,7 +43,6 @@ class Main {
                 }
                 println()
             }
-
             println("运行完成，感谢使用！")
         }
 

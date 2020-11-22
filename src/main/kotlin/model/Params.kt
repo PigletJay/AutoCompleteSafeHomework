@@ -15,7 +15,7 @@ data class LoginParams(
 )
 
 /**
- * 专题活动参数
+ * 专题作业签到参数
  */
 @Serializable
 data class SpecialParams(
@@ -26,7 +26,7 @@ data class SpecialParams(
 )
 
 /**
- * 假期作业参数
+ * 假期作业签到参数
  */
 @Serializable
 data class HolidayParams(
@@ -39,7 +39,7 @@ data class HolidayParams(
 )
 
 /**
- * 知识测试参数
+ * 知识测试签到参数
  */
 @Serializable
 data class KnowledgeTestParams(
@@ -74,7 +74,7 @@ data class KnowledgeTestParams(
 )
 
 /**
- * 家校互动参数
+ * 家校互动签到参数
  */
 @Serializable
 data class SchoolHomeInteractionParams(

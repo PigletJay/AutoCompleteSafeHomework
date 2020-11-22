@@ -3,7 +3,7 @@ package utils
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import utils.ApiService.userInfo
@@ -14,25 +14,29 @@ import java.util.zip.GZIPInputStream
 object HttpClient {
 
     //默认Json
-    private val defJson = Json { ignoreUnknownKeys = true }
+    val defJson = Json { ignoreUnknownKeys = true }
 
     /**
      * GET
      */
-    suspend inline fun <reified T> get(url: String, params: String = ""): T =
-        doRequest("$url$params", null, serializer())
+    suspend inline fun <reified T> get(url: String, params: String = ""): T {
+        return parseResult(doRequest("$url$params", null))
+    }
 
     /**
      * POST
      */
-    suspend inline fun <reified T> post(url: String, params: Any): T =
-        doRequest(url, params, serializer())
+    @Suppress("UNCHECKED_CAST")
+    suspend inline fun <reified T> post(url: String, params: Any): T {
+        val paramsJson = defJson.encodeToString(params::class.serializer() as KSerializer<Any>, params)
+        return parseResult(doRequest(url, paramsJson))
+    }
 
     /**
      * 请求
      */
-    @Suppress("UNCHECKED_CAST", "BlockingMethodInNonBlockingContext")
-    suspend fun <T> doRequest(url: String, params: Any?, serializer: KSerializer<T>): T = withContext(IO) {
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun doRequest(url: String, params: String?): String = withContext(IO) {
         var urlConn: HttpURLConnection? = null
         try {
             //替换域名
@@ -56,28 +60,28 @@ object HttpClient {
                     requestMethod = "POST"
                     //写入数据
                     outputStream.use {
-                        it.write(
-                            defJson.encodeToString(params::class.serializer() as KSerializer<Any>, params).toByteArray()
-                        )
+                        it.write(params.toByteArray())
                     }
                 }
             }
-            //转话响应数据
-            val response = if (urlConn.contentEncoding == "gzip") {
+            //返回响应数据
+            return@withContext if (urlConn.contentEncoding == "gzip") {
                 GZIPInputStream(urlConn.inputStream)
             } else {
                 urlConn.inputStream
             }.reader().use {
                 it.readText()
             }
-            //按类型返回数据
-            if (serializer == String.serializer()) {
-                response as T
-            } else {
-                defJson.decodeFromString(serializer, response)
-            }
         } finally {
             urlConn?.disconnect()
+        }
+    }
+
+    inline fun <reified T> parseResult(result: String): T {
+        return if (T::class == String::class) {
+            result as T
+        } else {
+            defJson.decodeFromString(result)
         }
     }
 }

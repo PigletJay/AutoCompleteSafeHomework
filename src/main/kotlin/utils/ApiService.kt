@@ -126,8 +126,8 @@ object ApiService {
      * 获取专题活动标识
      */
     private suspend fun getSpecialId(url: String): String = with(HttpClient.get<String>(url)) {
-        val urlFile =
-            substringAfter("region == 0", "").substringBefore(";").substringAfter("'").substringBeforeLast("'")
+        val urlFile = substringAfter("region == 0", "").substringBefore(";")
+            .substringAfter("'").substringBeforeLast("'")
         if (urlFile.isNotEmpty()) {
             val urlPath = url.substringBeforeLast("/")
             return getSpecialId("$urlPath/$urlFile")
