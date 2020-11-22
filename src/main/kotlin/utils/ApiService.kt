@@ -28,24 +28,26 @@ object ApiService {
     /**
      * 尝试完成作业
      */
-    suspend fun doHomework(homework: Homework) = runCatching {
-        when (homework.sort) {
-            "Skill" -> doSkill(homework.url)
-            "Special" -> doSpecial(homework.url)
-            "SummerWinterHoliday" -> doHoliday(homework.publishDateTime.take(4).toInt(), homework.semester)
+    suspend fun doHomework(homework: Homework) {
+        runCatching {
+            when (homework.sort) {
+                "Skill" -> doSkill(homework.url)
+                "Special" -> doSpecial(homework.url)
+                "SummerWinterHoliday" -> doHoliday(homework.publishDateTime.take(4).toInt(), homework.semester)
+            }
+        }.onSuccess {
+            println("Success")
+        }.onFailure {
+            println("Failure[${it.message}]")
         }
-    }.onSuccess {
-        println("Success")
-    }.onFailure {
-        println("Failure[${it.message}]")
-    }.isSuccess
+    }
 
     /**
      * 获取未完成作业列表
      */
-    suspend fun homeworkList(): List<Homework> {
-        return HttpClient.get<List<Homework>>(Urls.homeworkList).filter { it.workStatus == "UnFinish" }
-    }
+    suspend fun homeworkList(): List<Homework>? = runCatching {
+        HttpClient.get<List<Homework>>(Urls.homeworkList).filter { it.workStatus == "UnFinish" }
+    }.getOrNull()
 
     /**
      * 尝试完成安全技能

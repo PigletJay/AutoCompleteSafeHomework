@@ -14,7 +14,10 @@ import java.util.zip.GZIPInputStream
 object HttpClient {
 
     //默认Json
-    val defJson = Json { ignoreUnknownKeys = true }
+    val defJson = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    }
 
     /**
      * GET
@@ -77,6 +80,9 @@ object HttpClient {
         }
     }
 
+    /**
+     * 解析结果
+     */
     inline fun <reified T> parseResult(result: String): T {
         return if (T::class == String::class) {
             result as T
